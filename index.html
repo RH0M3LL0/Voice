@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="ig">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Igbo Voice</title>
+<meta name="description" content="Igbo text-to-speech voiceover generator with multiple voices">
+<meta name="theme-color" content="#0f3d2e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{
+  --bg:#f6f7f4;--card:#fff;--ink:#16211c;--mute:#5d6b64;--line:#dfe4de;
+  --brand:#0f3d2e;--brand2:#1c6b4f;--accent:#d9a21b;--err:#b3261e;--errbg:#fdecea;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0d1511;--card:#16211c;--ink:#e8efe9;--mute:#97a79d;--line:#2a3a32;--brand:#2b8f6a;--brand2:#3bb88a;--errbg:#3a1b18;--err:#ff8a80}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  min-height:100vh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 16px}
+h1{font-size:1.4rem;margin:0;letter-spacing:-.01em}
+h1 small{display:block;font-weight:400;font-size:.8rem;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+label{font-size:.85rem;color:var(--mute);display:block;margin-bottom:6px}
+textarea,select,input{font:inherit;color:inherit}
+textarea{width:100%;min-height:150px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:12px;background:transparent}
+select{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:9px 10px;max-width:100%}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--brand2);outline-offset:1px}
+.tabs{display:flex;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
+.tabs button{flex:1;padding:9px;border:0;border-radius:9px;background:transparent;color:var(--mute);font-weight:600;cursor:pointer;font-size:.95rem}
+.tabs button[aria-selected="true"]{background:var(--brand);color:#fff}
+.voicepick{margin-bottom:10px}
+.voicepick select{width:100%}
+.line{display:grid;grid-template-columns:1fr auto;gap:6px 8px;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:12px}
+.line select{min-width:0}
+.line textarea{grid-column:1/-1;min-height:64px}
+.line .rm{border:1px solid var(--line);background:transparent;color:var(--mute);border-radius:10px;width:40px;cursor:pointer;font-size:1.1rem}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.ghost{border:1px solid var(--line);background:transparent;color:inherit;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:.9rem}
+.chars{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chars button{min-width:38px;height:38px;border:1px solid var(--line);background:transparent;color:inherit;border-radius:10px;font-size:1.05rem;cursor:pointer}
+.chars button:active{background:var(--line)}
+.meta{display:flex;justify-content:space-between;color:var(--mute);font-size:.8rem}
+.play{width:100%;margin-top:14px;padding:18px;border:0;border-radius:14px;background:var(--brand);color:#fff;
+  font-size:1.15rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer}
+.play:disabled{opacity:.6;cursor:progress}
+.play svg{width:24px;height:24px;fill:currentColor}
+.spin{width:22px;height:22px;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:s .8s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+.err{display:none;margin-top:12px;padding:12px;border-radius:12px;background:var(--errbg);color:var(--err);font-size:.92rem}
+.err.show{display:block}
+.err button{margin-left:8px;background:none;border:1px solid currentColor;color:inherit;border-radius:8px;padding:2px 10px;cursor:pointer}
+#result{display:none;margin-top:14px}
+#result.show{display:block}
+audio{width:100%}
+.dl{display:flex;gap:10px;margin-top:10px}
+.dl button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--brand2);background:transparent;color:var(--brand2);font-weight:600;cursor:pointer;font-size:1rem}
+.dl button:disabled{opacity:.5}
+.icon-btn{border:1px solid var(--line);background:var(--card);color:inherit;border-radius:12px;padding:8px 12px;cursor:pointer;font-size:.9rem}
+.net{font-size:.75rem;padding:2px 8px;border-radius:99px;background:var(--accent);color:#2a2000;display:none}
+.net.show{display:inline-block}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);width:min(94vw,520px);max-height:92vh;overflow:auto;padding:18px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog h2{margin:0 0 4px;font-size:1.1rem}
+dialog h3{margin:14px 0 6px;font-size:.95rem}
+dialog p{margin:0 0 12px;color:var(--mute);font-size:.85rem}
+dialog input,dialog select,dialog textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:transparent;margin-bottom:12px}
+dialog input[type=range]{padding:0}
+.vrow{display:grid;grid-template-columns:1fr 1.4fr auto;gap:6px;margin-bottom:6px}
+.vrow input{margin:0}
+.vrow button{border:1px solid var(--line);background:transparent;color:var(--mute);border-radius:10px;width:38px;cursor:pointer}
+.row{display:flex;gap:10px}.row>div{flex:1}
+.warn{font-size:.8rem;color:var(--mute);border-left:3px solid var(--accent);padding-left:8px;margin-bottom:12px}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+.actions button{padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:transparent;color:inherit;cursor:pointer}
+.actions .primary{background:var(--brand);border-color:var(--brand);color:#fff}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Igbo Voice <small>Text to speech with multiple native Igbo voices</small></h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="net" id="net">Offline</span>
+      <button class="icon-btn" id="openSettings" aria-label="Settings">⚙ Settings</button>
+    </div>
+  </header>
+
+  <main class="card">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabSingle" aria-selected="true">Single voice</button>
+      <button role="tab" id="tabConvo" aria-selected="false">Conversation</button>
+    </div>
+
+    <!-- Single -->
+    <section id="single">
+      <div class="voicepick"><label for="voiceSel">Voice</label><select id="voiceSel"></select></div>
+      <label for="text">Kpọọ ederede gị ebe a (your Igbo text)</label>
+      <textarea id="text" class="t" maxlength="5000" placeholder="Ndewo! Kedu ka ị mere?" lang="ig"></textarea>
+    </section>
+
+    <!-- Conversation -->
+    <section id="convo" hidden>
+      <div class="tools">
+        <button class="ghost" id="addLine" type="button">+ Add line</button>
+        <button class="ghost" id="importScript" type="button">Paste script</button>
+        <button class="ghost" id="clearLines" type="button">Clear</button>
+      </div>
+      <div id="lines"></div>
+    </section>
+
+    <div class="chars" id="chars" aria-label="Igbo characters"></div>
+    <div class="meta"><span id="status">Ready</span><span><span id="count">0</span> characters</span></div>
+
+    <button class="play" id="play">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Play</span>
+    </button>
+    <div class="err" id="err" role="alert"><span id="errMsg"></span><button id="retry">Retry</button></div>
+
+    <div id="result">
+      <audio id="audio" controls></audio>
+      <div class="dl">
+        <button id="dlMp3">Download MP3</button>
+        <button id="dlWav">Download WAV</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<dialog id="settings">
+  <form method="dialog" id="form">
+    <h2>Settings</h2>
+    <p>Saved on this device only.</p>
+
+    <h3>Voices</h3>
+    <p>Add one row per character (e.g. Nne Ochie, Nwa, Nna). Use the Voice ID of each verified clone from your ElevenLabs account.</p>
+    <div id="voiceRows"></div>
+    <button type="button" class="ghost" id="addVoice" style="margin-bottom:12px">+ Add voice</button>
+
+    <h3>Connection</h3>
+    <label for="proxyUrl">Proxy URL (recommended)</label>
+    <input id="proxyUrl" type="url" autocomplete="off" placeholder="https://xxxx.supabase.co/functions/v1/tts-proxy">
+
+    <label for="proxyToken">Proxy auth token (e.g. Supabase anon key, optional)</label>
+    <input id="proxyToken" autocomplete="off">
+
+    <label for="apiKey">ElevenLabs API key (only if no proxy)</label>
+    <input id="apiKey" type="password" autocomplete="off" placeholder="sk_...">
+    <div class="warn">A key typed here is stored in this browser and visible to anyone using it. For a public site, use the proxy so the key stays on the server.</div>
+
+    <div class="row">
+      <div><label for="model">Model</label>
+        <select id="model">
+          <option value="eleven_v3">eleven_v3</option>
+          <option value="eleven_multilingual_v2">eleven_multilingual_v2</option>
+        </select></div>
+      <div><label for="lang">Language code (optional)</label>
+        <input id="lang" placeholder="ig" autocomplete="off"></div>
+    </div>
+    <div class="row">
+      <div><label for="stab">Stability <span id="stabV"></span></label><input id="stab" type="range" min="0" max="1" step="0.05"></div>
+      <div><label for="sim">Similarity <span id="simV"></span></label><input id="sim" type="range" min="0" max="1" step="0.05"></div>
+    </div>
+    <div class="actions">
+      <button value="cancel" type="button" id="cancelS">Cancel</button>
+      <button class="primary" type="submit" id="saveS" value="save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="scriptDlg">
+  <form method="dialog" id="scriptForm">
+    <h2>Paste script</h2>
+    <p>One line per turn, as <b>Name: text</b>. Names must match your saved voices (not case-sensitive).</p>
+    <textarea id="scriptText" style="min-height:180px" placeholder="Nne Ochie: Nwa m, bia ebe a.&#10;Nwa: Ee, Mama."></textarea>
+    <div class="actions">
+      <button type="button" id="cancelScript">Cancel</button>
+      <button class="primary" type="submit" value="ok">Create lines</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const $ = id => document.getElementById(id);
+const DEFAULTS = {voices:[],proxyUrl:'',proxyToken:'',apiKey:'',model:'eleven_v3',lang:'',stab:0.6,sim:0.85};
+function load(){
+  let s={}; try{ s=JSON.parse(localStorage.getItem('igbo-voice')||'{}'); }catch{}
+  s={...DEFAULTS,...s};
+  if(!Array.isArray(s.voices)) s.voices=[];
+  if(s.voiceId && !s.voices.length) s.voices=[{name:'Voice 1',id:s.voiceId}];
+  delete s.voiceId; return s;
+}
+const save = s => { try { localStorage.setItem('igbo-voice', JSON.stringify(s)); } catch {} };
+let cfg = load();
+let mode='single', mp3Blob=null, parts=[], objUrl=null, activeTA=$('text');
+const cache = new Map();
+
+/* ---------- voices ---------- */
+const voiceList = () => cfg.voices.length ? cfg.voices : [{name:'Default voice',id:''}];
+function voiceOptions(sel, keep){
+  const cur = keep ?? sel.value; sel.innerHTML='';
+  voiceList().forEach((v,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=v.name||('Voice '+(i+1)); sel.appendChild(o); });
+  if(cur!=null && +cur < voiceList().length) sel.value=String(cur);
+}
+
+/* ---------- conversation lines ---------- */
+function addLine(voiceIdx=0, text=''){
+  const d=document.createElement('div'); d.className='line';
+  const s=document.createElement('select'); s.setAttribute('aria-label','Speaker'); voiceOptions(s, voiceIdx);
+  const rm=document.createElement('button'); rm.type='button'; rm.className='rm'; rm.textContent='✕'; rm.setAttribute('aria-label','Remove line');
+  rm.onclick=()=>{ d.remove(); upd(); };
+  const t=document.createElement('textarea'); t.className='t'; t.lang='ig'; t.maxLength=5000; t.value=text; t.placeholder='Ederede…';
+  t.addEventListener('input',upd);
+  d.append(s,rm,t); $('lines').appendChild(d); upd(); return t;
+}
+function resetLines(){
+  $('lines').innerHTML='';
+  const n=voiceList().length; addLine(0); addLine(n>1?1:0);
+}
+$('addLine').onclick=()=>{
+  const sels=$('lines').querySelectorAll('select'); const last=sels.length?+sels[sels.length-1].value:-1;
+  const n=voiceList().length; addLine(n>1?(last+1)%n:0).focus();
+};
+$('clearLines').onclick=resetLines;
+$('importScript').onclick=()=>{ $('scriptText').value=''; $('scriptDlg').showModal(); };
+$('cancelScript').onclick=()=>$('scriptDlg').close();
+$('scriptForm').addEventListener('submit',()=>{
+  const raw=$('scriptText').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); if(!raw.length) return;
+  const vs=voiceList(); const out=[];
+  raw.forEach(l=>{
+    const m=l.match(/^([^:：]{1,40})[:：]\s*(.+)$/);
+    const idx = m ? vs.findIndex(v=>(v.name||'').trim().toLowerCase()===m[1].trim().toLowerCase()) : -1;
+    if(m && idx>=0) out.push({i:idx,t:m[2]});
+    else if(out.length) out[out.length-1].t += ' '+l;
+    else out.push({i:0,t:l});
+  });
+  $('lines').innerHTML=''; out.forEach(o=>addLine(o.i,o.t));
+});
+
+/* ---------- modes ---------- */
+function setMode(m){
+  mode=m;
+  $('tabSingle').setAttribute('aria-selected',m==='single'); $('tabConvo').setAttribute('aria-selected',m==='convo');
+  $('single').hidden = m!=='single'; $('convo').hidden = m!=='convo';
+  activeTA = m==='single' ? $('text') : ($('lines').querySelector('textarea')||$('text'));
+  upd();
+}
+$('tabSingle').onclick=()=>setMode('single');
+$('tabConvo').onclick=()=>setMode('convo');
+
+/* ---------- Igbo character helper ---------- */
+['ị','ọ','ụ','ṅ','Ị','Ọ','Ụ','Ṅ','à','á','è','é','ì','í','ò','ó','ù','ú','ǹ','ń'].forEach(c=>{
+  const b=document.createElement('button'); b.type='button'; b.textContent=c; b.setAttribute('aria-label','Insert '+c);
+  b.addEventListener('pointerdown',e=>e.preventDefault());
+  b.onclick=()=>{const t=activeTA||$('text'),s=t.selectionStart,e=t.selectionEnd;t.setRangeText(c,s,e,'end');t.focus();upd();};
+  $('chars').appendChild(b);
+});
+document.addEventListener('focusin',e=>{ if(e.target.matches && e.target.matches('textarea.t')) activeTA=e.target; });
+function upd(){
+  const n = mode==='single' ? $('text').value.length : [...$('lines').querySelectorAll('textarea')].reduce((a,t)=>a+t.value.length,0);
+  $('count').textContent=n;
+}
+$('text').addEventListener('input',upd);
+
+/* ---------- network indicator ---------- */
+const net = () => $('net').classList.toggle('show', !navigator.onLine);
+addEventListener('online', net); addEventListener('offline', net); net();
+
+/* ---------- settings dialog ---------- */
+function voiceRow(v={name:'',id:''}){
+  const r=document.createElement('div'); r.className='vrow';
+  const n=document.createElement('input'); n.placeholder='Name (e.g. Nne Ochie)'; n.value=v.name; n.className='vn'; n.autocomplete='off';
+  const i=document.createElement('input'); i.placeholder='Voice ID'; i.value=v.id; i.className='vi'; i.autocomplete='off';
+  const x=document.createElement('button'); x.type='button'; x.textContent='✕'; x.setAttribute('aria-label','Remove voice'); x.onclick=()=>r.remove();
+  r.append(n,i,x); $('voiceRows').appendChild(r);
+}
+$('addVoice').onclick=()=>voiceRow();
+function fillForm(){
+  $('voiceRows').innerHTML=''; (cfg.voices.length?cfg.voices:[{name:'',id:''}]).forEach(voiceRow);
+  $('proxyUrl').value=cfg.proxyUrl; $('proxyToken').value=cfg.proxyToken; $('apiKey').value=cfg.apiKey;
+  $('model').value=cfg.model; $('lang').value=cfg.lang;
+  $('stab').value=cfg.stab; $('sim').value=cfg.sim; $('stabV').textContent=cfg.stab; $('simV').textContent=cfg.sim;
+}
+$('stab').oninput=e=>$('stabV').textContent=e.target.value;
+$('sim').oninput=e=>$('simV').textContent=e.target.value;
+$('openSettings').onclick=()=>{fillForm();$('settings').showModal();};
+$('cancelS').onclick=()=>$('settings').close();
+$('form').addEventListener('submit',()=>{
+  const voices=[...$('voiceRows').querySelectorAll('.vrow')].map((r,k)=>({
+    name:r.querySelector('.vn').value.trim()||('Voice '+(k+1)), id:r.querySelector('.vi').value.trim()})).filter(v=>v.id);
+  cfg={voices,proxyUrl:$('proxyUrl').value.trim(),proxyToken:$('proxyToken').value.trim(),apiKey:$('apiKey').value.trim(),
+    model:$('model').value,lang:$('lang').value.trim(),stab:+$('stab').value,sim:+$('sim').value};
+  save(cfg);
+  // refresh speaker pickers, keeping selections where possible
+  voiceOptions($('voiceSel'));
+  $('lines').querySelectorAll('select').forEach(s=>voiceOptions(s));
+});
+
+/* ---------- UI state ---------- */
+function setBusy(b,msg){
+  const p=$('play'); p.disabled=b;
+  p.innerHTML = b ? '<div class="spin"></div><span>Generating…</span>'
+    : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Play</span>';
+  $('status').textContent = b ? (msg||'Synthesizing audio…') : 'Ready';
+}
+function showErr(msg){ $('errMsg').textContent=msg; $('err').classList.add('show'); $('status').textContent='Error'; }
+function clearErr(){ $('err').classList.remove('show'); }
+
+/* Silent clip played on tap so mobile browsers allow playback after async fetches */
+function unlockAudio(){
+  const a=$('audio');
+  const hdr=new Uint8Array([82,73,70,70,44,0,0,0,87,65,86,69,102,109,116,32,16,0,0,0,1,0,1,0,64,31,0,0,128,62,0,0,2,0,16,0,100,97,116,97,8,0,0,0,0,0,0,0,0,0,0,0]);
+  a.src=URL.createObjectURL(new Blob([hdr],{type:'audio/wav'}));
+  a.play().catch(()=>{});
+}
+
+/* ---------- synthesis ---------- */
+async function synthesize(text, voiceId){
+  if(!navigator.onLine) throw new Error('You are offline. Check your connection and try again.');
+  if(!voiceId && !cfg.proxyUrl) throw new Error('Open Settings and add a voice (name + Voice ID).');
+  if(!cfg.proxyUrl && !cfg.apiKey) throw new Error('Open Settings and add a proxy URL or your ElevenLabs API key.');
+
+  const key=[voiceId,cfg.model,cfg.lang,cfg.stab,cfg.sim,text].join('|');
+  if(cache.has(key)) return cache.get(key);
+
+  const body = {text, model_id:cfg.model, voice_settings:{stability:cfg.stab, similarity_boost:cfg.sim, use_speaker_boost:true}};
+  if(cfg.lang) body.language_code = cfg.lang;
+
+  let url, headers = {'Content-Type':'application/json', 'Accept':'audio/mpeg'};
+  if(cfg.proxyUrl){
+    url = cfg.proxyUrl; if(voiceId) body.voice_id = voiceId;
+    if(cfg.proxyToken){ headers['Authorization']='Bearer '+cfg.proxyToken; headers['apikey']=cfg.proxyToken; }
+  } else {
+    url = `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`;
+    headers['xi-api-key'] = cfg.apiKey;
+  }
+
+  const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), 60000);
+  let res;
+  try { res = await fetch(url,{method:'POST',headers,body:JSON.stringify(body),signal:ctl.signal}); }
+  catch(e){
+    if(e.name==='AbortError') throw new Error('The request timed out. Try shorter text or retry.');
+    throw new Error('Network error. Could not reach the speech service.');
+  } finally { clearTimeout(to); }
+
+  if(!res.ok){
+    let detail=''; try{ const j=await res.json(); detail=j?.detail?.message||j?.detail?.status||j?.error||(typeof j?.detail==='string'?j.detail:''); }catch{}
+    const map={401:'Invalid or missing API key.',402:'Your ElevenLabs plan does not allow this request.',403:'Access denied. Check the voice ID and plan.',
+      404:'Voice not found. Check the voice ID.',422:'The service rejected the request (text, model or language code).',429:'Too many requests or quota reached. Wait and retry.'};
+    throw new Error((map[res.status]|| (res.status>=500?'The speech service is having problems. Retry shortly.':`Request failed (${res.status}).`)) + (detail?` (${detail})`:''));
+  }
+  const blob = await res.blob();
+  if(!blob.size) throw new Error('The service returned empty audio.');
+  const out=new Blob([blob],{type:'audio/mpeg'}); cache.set(key,out); return out;
+}
+
+function getLines(){
+  const vs=voiceList();
+  if(mode==='single'){
+    const v=vs[+$('voiceSel').value||0]; return [{text:$('text').value.trim(), id:v.id, name:v.name}];
+  }
+  return [...$('lines').querySelectorAll('.line')].map(d=>{
+    const v=vs[+d.querySelector('select').value||0]; return {text:d.querySelector('textarea').value.trim(), id:v.id, name:v.name};
+  }).filter(l=>l.text);
+}
+
+async function run(){
+  const lines=getLines();
+  if(!lines.length){ showErr('Type some Igbo text first.'); return; }
+  clearErr(); setBusy(true); unlockAudio();
+  const out=[];
+  try{
+    for(let i=0;i<lines.length;i++){
+      if(lines.length>1) $('status').textContent=`Line ${i+1} of ${lines.length} (${lines[i].name})…`;
+      try{ out.push(await synthesize(lines[i].text, lines[i].id)); }
+      catch(e){ throw new Error(lines.length>1 ? `Line ${i+1} (${lines[i].name}): ${e.message}` : e.message); }
+    }
+    parts=out; mp3Blob=new Blob(out,{type:'audio/mpeg'});
+    if(objUrl) URL.revokeObjectURL(objUrl);
+    objUrl=URL.createObjectURL(mp3Blob);
+    const a=$('audio'); a.src=objUrl; $('result').classList.add('show');
+    await a.play().catch(()=>{});
+  }catch(e){ showErr(e.message||'Something went wrong.'); }
+  finally{ setBusy(false); }
+}
+$('play').onclick=run; $('retry').onclick=run;
+
+/* ---------- downloads ---------- */
+function saveBlob(blob,name){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+const stamp=()=>'igbo-voice-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+$('dlMp3').onclick=()=>{ if(mp3Blob) saveBlob(mp3Blob,stamp()+'.mp3'); };
+$('dlWav').onclick=async()=>{
+  if(!parts.length) return; const b=$('dlWav'); b.disabled=true;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext; const ctx=new AC();
+    const bufs=[]; for(const p of parts) bufs.push(await ctx.decodeAudioData(await p.arrayBuffer()));
+    const sr=ctx.sampleRate; ctx.close();
+    saveBlob(toWav(bufs,sr),stamp()+'.wav');
+  }catch{ showErr('Could not convert to WAV in this browser. Use the MP3 download.'); }
+  finally{ b.disabled=false; }
+};
+function toWav(bufs,sr){
+  const ch=Math.max(...bufs.map(b=>b.numberOfChannels)), len=bufs.reduce((a,b)=>a+b.length,0), bytes=len*ch*2;
+  const ab=new ArrayBuffer(44+bytes), v=new DataView(ab);
+  const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  w(0,'RIFF'); v.setUint32(4,36+bytes,true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true);
+  v.setUint16(20,1,true); v.setUint16(22,ch,true); v.setUint32(24,sr,true); v.setUint32(28,sr*ch*2,true);
+  v.setUint16(32,ch*2,true); v.setUint16(34,16,true); w(36,'data'); v.setUint32(40,bytes,true);
+  let o=44;
+  for(const b of bufs){
+    const data=[]; for(let c=0;c<ch;c++) data.push(b.getChannelData(Math.min(c,b.numberOfChannels-1)));
+    for(let i=0;i<b.length;i++) for(let c=0;c<ch;c++){ const s=Math.max(-1,Math.min(1,data[c][i])); v.setInt16(o,s<0?s*0x8000:s*0x7fff,true); o+=2; }
+  }
+  return new Blob([ab],{type:'audio/wav'});
+}
+
+/* ---------- init ---------- */
+voiceOptions($('voiceSel'),0); resetLines(); upd();
+if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>

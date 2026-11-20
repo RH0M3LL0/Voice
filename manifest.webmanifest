@@ -1,0 +1,16 @@
+{
+  "name": "Igbo Voice",
+  "short_name": "Igbo Voice",
+  "description": "Igbo text-to-speech voiceover generator",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f7f4",
+  "theme_color": "#0f3d2e",
+  "lang": "ig",
+  "icons": [
+    { "src": "icon.svg", "sizes": "192x192 512x512", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "192x192 512x512", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
